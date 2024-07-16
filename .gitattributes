@@ -1,2 +1,2 @@
-# Don't show `Cargo.lock` in `git diff`
-Cargo.lock -diff
+# Exclude from `git diff`
+/Cargo.lock -diff
