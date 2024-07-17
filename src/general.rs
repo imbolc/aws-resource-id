@@ -25,23 +25,22 @@ use sqlx::{
 };
 use std::{convert::TryFrom, fmt};
 
-/// Error encountered when parsing or validating an AWS resource ID in the
-/// general format
+/// Error encountered when parsing an AWS resource ID in the general format
 #[derive(Debug, thiserror::Error)]
 #[error("failed to initialize {target_type} from \"{input}\": {error_detail}")]
-pub struct Error {
+pub struct GeneralResourceError {
     /// The AWS resource type being parsed (e.g., [`AwsAmiId`])
     target_type: &'static str,
     /// The input string that failed to parse
     input: String,
     /// Detailed description of the error
-    error_detail: ErrorDetail,
+    error_detail: GeneralResourceErrorDetail,
 }
 
 /// Specific details about errors encountered when parsing AWS resource IDs in
 /// the general format
 #[derive(Debug, thiserror::Error)]
-pub enum ErrorDetail {
+pub enum GeneralResourceErrorDetail {
     /// Incorrect prefix for the resource type
     #[error("incorrect prefix, expected \"{0}\"")]
     WrongPrefix(&'static str),
@@ -55,12 +54,12 @@ pub enum ErrorDetail {
 
 /// The unique alphanumeric part of an AWS resource id in the general format
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum AwsResourceId {
+enum UniquePart {
     C8([u8; 8]),
     C17([u8; 17]),
 }
 
-impl AwsResourceId {
+impl UniquePart {
     fn as_slice(&self) -> &[u8] {
         match self {
             Self::C8(x) => x,
@@ -73,55 +72,58 @@ macro_rules! impl_resource_id {
     ($type:ident, $prefix:literal, $doc:literal) => {
         #[doc = $doc]
         #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        pub struct $type(AwsResourceId);
+        pub struct $type(UniquePart);
 
         impl $type {
             const PREFIX: &'static str = $prefix;
         }
 
         impl TryFrom<&str> for $type {
-            type Error = Error;
+            type Error = $crate::Error;
 
             fn try_from(s: &str) -> Result<Self, Self::Error> {
                 if !s.starts_with(Self::PREFIX) {
-                    return Err(Error::new(
+                    return Err(GeneralResourceError::new(
                         short_type_name::<$type>(),
                         s,
-                        ErrorDetail::WrongPrefix(Self::PREFIX),
-                    ));
+                        GeneralResourceErrorDetail::WrongPrefix(Self::PREFIX),
+                    )
+                    .into());
                 }
                 if !s[Self::PREFIX.len()..]
                     .chars()
                     .all(|c| c.is_ascii_alphanumeric())
                 {
-                    return Err(Error::new(
+                    return Err(GeneralResourceError::new(
                         short_type_name::<$type>(),
                         s,
-                        ErrorDetail::NonAsciiAlphanumeric,
-                    ));
+                        GeneralResourceErrorDetail::NonAsciiAlphanumeric,
+                    )
+                    .into());
                 }
 
                 let id = &s[Self::PREFIX.len()..];
                 if id.len() == 8 {
                     let mut arr = [0u8; 8];
                     arr.copy_from_slice(id.as_bytes());
-                    Ok($type(AwsResourceId::C8(arr)))
+                    Ok($type(UniquePart::C8(arr)))
                 } else if id.len() == 17 {
                     let mut arr = [0u8; 17];
                     arr.copy_from_slice(id.as_bytes());
-                    Ok($type(AwsResourceId::C17(arr)))
+                    Ok($type(UniquePart::C17(arr)))
                 } else {
-                    Err(Error::new(
+                    Err(GeneralResourceError::new(
                         short_type_name::<$type>(),
                         s,
-                        ErrorDetail::IdLength(id.len()),
-                    ))
+                        GeneralResourceErrorDetail::IdLength(id.len()),
+                    )
+                    .into())
                 }
             }
         }
 
         impl TryFrom<String> for $type {
-            type Error = Error;
+            type Error = $crate::Error;
 
             fn try_from(s: String) -> Result<Self, Self::Error> {
                 Self::try_from(s.as_str())
@@ -208,8 +210,12 @@ fn short_type_name<T>() -> &'static str {
     name.split("::").last().unwrap_or(name)
 }
 
-impl Error {
-    fn new(target_type: &'static str, input: impl Into<String>, error_detail: ErrorDetail) -> Self {
+impl GeneralResourceError {
+    fn new(
+        target_type: &'static str,
+        input: impl Into<String>,
+        error_detail: GeneralResourceErrorDetail,
+    ) -> Self {
         Self {
             target_type,
             input: input.into(),
@@ -285,6 +291,22 @@ mod tests {
             format!("{:?}", ami("ami-12345678")),
             r#"AwsAmiId("ami-12345678")"#
         );
+    }
+
+    #[test]
+    fn test_into_string() {
+        let s: String = ami("ami-12345678").into();
+        assert_eq!(s, "ami-12345678");
+    }
+
+    #[test]
+    fn test_tryfrom_str() {
+        assert!(AwsAmiId::try_from("ami-12345678").is_ok());
+    }
+
+    #[test]
+    fn test_tryfrom_string() {
+        assert!(AwsAmiId::try_from("ami-12345678".to_string()).is_ok());
     }
 
     #[cfg(feature = "serde")]
