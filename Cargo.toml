@@ -6,9 +6,13 @@ name = "aws-resource-id"
 repository = "https://github.com/imbolc/aws-resource-id"
 version = "0.1.0"
 
+[features]
+sqlx-postgres = ["sqlx"]
+serde = ["dep:serde"]
+
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-sqlx = { version = "0.7", features = ["postgres"] }
+serde = { version = "1", features = ["derive"], optional = true }
+sqlx = { version = "0.7", features = ["postgres"], optional = true }
 thiserror = "1"
 
 [dev-dependencies]

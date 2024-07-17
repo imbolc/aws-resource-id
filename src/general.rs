@@ -18,6 +18,7 @@
 //! > might have some existing resources with short IDs, however, any new
 //! > resources will receive the longer IDs.
 //! > <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html>
+#[cfg(feature = "sqlx-postgres")]
 use sqlx::{
     postgres::{PgTypeInfo, PgValueRef},
     Postgres, Type,
@@ -152,12 +153,14 @@ macro_rules! impl_resource_id {
             }
         }
 
+        #[cfg(feature = "sqlx-postgres")]
         impl Type<Postgres> for $type {
             fn type_info() -> PgTypeInfo {
                 <&str as Type<Postgres>>::type_info()
             }
         }
 
+        #[cfg(feature = "sqlx-postgres")]
         impl<'q> sqlx::encode::Encode<'q, Postgres> for $type {
             fn encode_by_ref(
                 &self,
@@ -167,6 +170,7 @@ macro_rules! impl_resource_id {
             }
         }
 
+        #[cfg(feature = "sqlx-postgres")]
         impl<'r> sqlx::decode::Decode<'r, Postgres> for $type {
             fn decode(
                 value: PgValueRef<'r>,
@@ -176,6 +180,7 @@ macro_rules! impl_resource_id {
             }
         }
 
+        #[cfg(feature = "serde")]
         impl serde::Serialize for $type {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -185,6 +190,7 @@ macro_rules! impl_resource_id {
             }
         }
 
+        #[cfg(feature = "serde")]
         impl<'de> serde::Deserialize<'de> for $type {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
@@ -281,6 +287,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_serialize() {
         assert_eq!(
@@ -289,6 +296,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_deserialize() {
         assert_eq!(
