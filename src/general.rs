@@ -1,10 +1,15 @@
-//! # IDs following the general AWS resources format
+//! # AWS Resource IDs in a General Format
 //!
-//! The general format consists of two parts:
-//! - a prefix identifying the resource e.g. `ami-` for AMI
-//! - a random alfanumeric 8 or 17 characters long unique string
+//! This module handles AWS resource IDs that follow a specific format:
 //!
-//! > ## Resource ID length
+//! 1. Prefix: a short string specific to each resource type (e.g., `ami-` for
+//!    AMIs)
+//! 2. Identifier: an 8 or 17 character unique string containing only:
+//!    - Lowercase letters (a-z)
+//!    - Numbers (0-9)
+//!
+//! ## Resource ID length
+//!
 //! > Prior to January 2016, the IDs assigned to newly created resources of
 //! > certain resource types used 8 characters after the hyphen (for example,
 //! > i-1a2b3c4d). From January 2016 to June 2018, we changed the IDs of these
@@ -19,33 +24,35 @@ use sqlx::{
 };
 use std::{convert::TryFrom, fmt};
 
-/// Gerenal AWS resource error
+/// Error encountered when parsing or validating an AWS resource ID in the
+/// general format
 #[derive(Debug, thiserror::Error)]
-#[error("initialization of `{target_type}` by \"{input}\" errored with: {error_detail}")]
+#[error("failed to initialize {target_type} from \"{input}\": {error_detail}")]
 pub struct Error {
-    /// Target type e.g. [`AwsAmiId`]
+    /// The AWS resource type being parsed (e.g., [`AwsAmiId`])
     target_type: &'static str,
-    /// Initialization input
+    /// The input string that failed to parse
     input: String,
-    /// Error detail
+    /// Detailed description of the error
     error_detail: ErrorDetail,
 }
 
-/// Details on general AWS resource error
+/// Specific details about errors encountered when parsing AWS resource IDs in
+/// the general format
 #[derive(Debug, thiserror::Error)]
 pub enum ErrorDetail {
-    /// Wrong prefix, e.g. not an `ami-` for [`AwsAmiId`]
-    #[error("wrong prefix, expected {0}")]
+    /// Incorrect prefix for the resource type
+    #[error("incorrect prefix, expected \"{0}\"")]
     WrongPrefix(&'static str),
-    /// Wrong length of the unique part of the ID
-    #[error("the unique part must be 8 or 17 characters, not {0} long")]
+    /// Invalid length of the unique identifier part
+    #[error("the unique part must be 8 or 17, not {0} characters long")]
     IdLength(usize),
-    /// The unique part of the ID contains non-alfanumeric-ASCII characters
-    #[error("the unique part contains non ascii alfanumeric characters")]
+    /// The unique identifier contains invalid characters
+    #[error("the unique part contains non ascii alphanumeric characters")]
     NonAsciiAlphanumeric,
 }
 
-/// The alphanumeric part of an AWS resource id
+/// The unique alphanumeric part of an AWS resource id in the general format
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum AwsResourceId {
     C8([u8; 8]),
@@ -296,7 +303,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-            "initialization of `AwsAmiId` by \"amx-12345678\" errored with: wrong prefix, expected ami-"
+            "failed to initialize AwsAmiId from \"amx-12345678\": incorrect prefix, expected \"ami-\""
         );
     }
 
@@ -306,14 +313,14 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-            "initialization of `AwsAmiId` by \"ami-1234567\" errored with: the unique part must be 8 or 17 characters, not 7 long"
+            "failed to initialize AwsAmiId from \"ami-1234567\": the unique part must be 8 or 17, not 7 characters long"
         );
 
         let result = AwsAmiId::try_from("ami-123456789012345678");
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-            "initialization of `AwsAmiId` by \"ami-123456789012345678\" errored with: the unique part must be 8 or 17 characters, not 18 long"
+            "failed to initialize AwsAmiId from \"ami-123456789012345678\": the unique part must be 8 or 17, not 18 characters long"
         );
     }
 
@@ -323,7 +330,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-            "initialization of `AwsAmiId` by \"ami-1234567!\" errored with: the unique part contains non ascii alfanumeric characters"
+           "failed to initialize AwsAmiId from \"ami-1234567!\": the unique part contains non ascii alphanumeric characters"
         );
     }
 
