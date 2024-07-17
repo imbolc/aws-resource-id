@@ -8,8 +8,6 @@ pub struct RegionError(String);
 
 /// AWS Region ID
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(try_from = "&str", into = "&str"))]
 pub enum AwsRegionId {
     /// Africa (Cape Town)
     AfSouth1,
@@ -169,6 +167,27 @@ impl fmt::Display for AwsRegionId {
 impl From<AwsRegionId> for String {
     fn from(value: AwsRegionId) -> Self {
         value.to_string()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for AwsRegionId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        AwsRegionId::try_from(s.as_str()).map_err(serde::de::Error::custom)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for AwsRegionId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.as_ref())
     }
 }
 
