@@ -16,5 +16,5 @@ Copyable AWS resource IDs
 
 This project is licensed under the [MIT license][license].
 
-[.pre-commit.sh]: https://github.com/imbolc/aws-resource-id/blob/main/pre-commit.sh
+[.pre-commit.sh]: https://github.com/imbolc/aws-resource-id/blob/main/.pre-commit.sh
 [license]: https://github.com/imbolc/aws-resource-id/blob/main/LICENSE
