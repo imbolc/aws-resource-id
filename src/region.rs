@@ -249,6 +249,18 @@ mod tests {
     }
 
     #[test]
+    fn test_eq() {
+        assert_eq!(
+            AwsRegionId::try_from("us-east-1").unwrap(),
+            AwsRegionId::try_from("us-east-1").unwrap(),
+        );
+        assert_ne!(
+            AwsRegionId::try_from("us-east-1").unwrap(),
+            AwsRegionId::try_from("eu-west-2").unwrap(),
+        );
+    }
+
+    #[test]
     fn test_valid_regions() {
         assert_eq!(
             AwsRegionId::try_from("us-east-1").unwrap(),

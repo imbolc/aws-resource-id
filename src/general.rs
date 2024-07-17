@@ -281,6 +281,12 @@ mod tests {
     }
 
     #[test]
+    fn test_eq() {
+        assert_eq!(ami("ami-12345678"), ami("ami-12345678"));
+        assert_ne!(ami("ami-12345678"), ami("ami-abcdefgh"));
+    }
+
+    #[test]
     fn test_fmt_display() {
         assert_eq!(format!("{}", ami("ami-12345678")), "ami-12345678");
     }
