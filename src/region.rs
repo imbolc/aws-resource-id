@@ -158,6 +158,14 @@ impl TryFrom<String> for AwsRegionId {
     }
 }
 
+impl TryFrom<&String> for AwsRegionId {
+    type Error = crate::Error;
+
+    fn try_from(s: &String) -> Result<Self, Self::Error> {
+        Self::try_from(s.as_str())
+    }
+}
+
 impl fmt::Display for AwsRegionId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_ref())
@@ -332,6 +340,14 @@ mod tests {
     fn test_tryfrom_string() {
         assert_eq!(
             AwsRegionId::try_from("eu-central-1".to_string()).unwrap(),
+            AwsRegionId::EuCentral1
+        );
+    }
+
+    #[test]
+    fn test_tryfrom_refstring() {
+        assert_eq!(
+            AwsRegionId::try_from(&"eu-central-1".to_string()).unwrap(),
             AwsRegionId::EuCentral1
         );
     }

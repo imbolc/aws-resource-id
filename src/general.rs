@@ -130,6 +130,14 @@ macro_rules! impl_resource_id {
             }
         }
 
+        impl TryFrom<&String> for $type {
+            type Error = $crate::Error;
+
+            fn try_from(s: &String) -> Result<Self, Self::Error> {
+                Self::try_from(s.as_str())
+            }
+        }
+
         impl fmt::Display for $type {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{}", Self::PREFIX)?;
@@ -313,6 +321,11 @@ mod tests {
     #[test]
     fn test_tryfrom_string() {
         assert!(AwsAmiId::try_from("ami-12345678".to_string()).is_ok());
+    }
+
+    #[test]
+    fn test_tryfrom_refstring() {
+        assert!(AwsAmiId::try_from(&"ami-12345678".to_string()).is_ok());
     }
 
     #[cfg(feature = "serde")]
