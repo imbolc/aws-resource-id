@@ -1,5 +1,5 @@
 //! # AWS Region ID
-use std::{convert::TryFrom, fmt};
+use std::{convert::TryFrom, fmt, str::FromStr};
 
 /// Error encountered when parsing an AWS region
 #[derive(Debug, thiserror::Error)]
@@ -163,6 +163,14 @@ impl TryFrom<&String> for AwsRegionId {
 
     fn try_from(s: &String) -> Result<Self, Self::Error> {
         Self::try_from(s.as_str())
+    }
+}
+
+impl FromStr for AwsRegionId {
+    type Err = crate::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(s)
     }
 }
 
@@ -348,6 +356,18 @@ mod tests {
     fn test_tryfrom_refstring() {
         assert_eq!(
             AwsRegionId::try_from(&"eu-central-1".to_string()).unwrap(),
+            AwsRegionId::EuCentral1
+        );
+    }
+
+    #[test]
+    fn test_fromstr() {
+        assert_eq!(
+            "eu-central-1".parse::<AwsRegionId>().unwrap(),
+            AwsRegionId::EuCentral1
+        );
+        assert_eq!(
+            "eu-central-1".to_string().parse::<AwsRegionId>().unwrap(),
             AwsRegionId::EuCentral1
         );
     }

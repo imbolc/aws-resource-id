@@ -23,7 +23,7 @@ use sqlx::{
     postgres::{PgTypeInfo, PgValueRef},
     Postgres, Type,
 };
-use std::{convert::TryFrom, fmt};
+use std::{convert::TryFrom, fmt, str::FromStr};
 
 /// Error encountered when parsing an AWS resource ID in the general format
 #[derive(Debug, thiserror::Error)]
@@ -135,6 +135,14 @@ macro_rules! impl_resource_id {
 
             fn try_from(s: &String) -> Result<Self, Self::Error> {
                 Self::try_from(s.as_str())
+            }
+        }
+
+        impl FromStr for $type {
+            type Err = $crate::Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Self::try_from(s)
             }
         }
 
@@ -326,6 +334,12 @@ mod tests {
     #[test]
     fn test_tryfrom_refstring() {
         assert!(AwsAmiId::try_from(&"ami-12345678".to_string()).is_ok());
+    }
+
+    #[test]
+    fn test_fromstr() {
+        assert!("ami-12345678".parse::<AwsAmiId>().is_ok(),);
+        assert!("ami-12345678".to_string().parse::<AwsAmiId>().is_ok(),);
     }
 
     #[cfg(feature = "serde")]
