@@ -225,8 +225,8 @@ mod sqlx_impl {
         fn encode_by_ref(
             &self,
             buf: &mut sqlx::postgres::PgArgumentBuffer,
-        ) -> sqlx::encode::IsNull {
-            <String as sqlx::Encode<Postgres>>::encode(self.to_string(), buf)
+        ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
+            <&str as sqlx::Encode<Postgres>>::encode(self.as_ref(), buf)
         }
     }
 

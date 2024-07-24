@@ -183,7 +183,7 @@ macro_rules! impl_resource_id {
             fn encode_by_ref(
                 &self,
                 buf: &mut sqlx::postgres::PgArgumentBuffer,
-            ) -> sqlx::encode::IsNull {
+            ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
                 <String as sqlx::encode::Encode<Postgres>>::encode_by_ref(&self.to_string(), buf)
             }
         }
