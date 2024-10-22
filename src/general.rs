@@ -719,3 +719,61 @@ mod tests {
         );
     }
 }
+
+#[cfg(feature = "sqlx-postgres")]
+#[cfg(test)]
+mod sqlx_tests {
+    use super::*;
+    use sqlx::PgPool;
+
+    #[ignore]
+    #[sqlx::test]
+    async fn test_sqlx_serialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let ami_str = "ami-12345678";
+        let ami: AwsAmiId = ami_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::varchar", ami as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, ami_str);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn test_sqlx_serialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let ami_str = "ami-12345678";
+        let ami: AwsAmiId = ami_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::text", ami as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, ami_str);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn test_sqlx_deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let ami: AwsAmiId = "ami-12345678".parse().unwrap();
+        let deserialized =
+            sqlx::query_scalar!(r#"SELECT 'ami-12345678'::varchar as "val: AwsAmiId""#)
+                .fetch_one(&pool)
+                .await?
+                .unwrap();
+        assert_eq!(deserialized, ami);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn test_sqlx_deserialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let ami: AwsAmiId = "ami-12345678".parse().unwrap();
+        let deserialized = sqlx::query_scalar!(r#"SELECT 'ami-12345678' as "val: AwsAmiId""#)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(deserialized, ami);
+        Ok(())
+    }
+}
