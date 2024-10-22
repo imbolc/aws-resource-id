@@ -217,7 +217,11 @@ mod sqlx_impl {
 
     impl Type<Postgres> for AwsRegionId {
         fn type_info() -> PgTypeInfo {
-            PgTypeInfo::with_name("TEXT")
+            <String as Type<Postgres>>::type_info()
+        }
+
+        fn compatible(ty: &PgTypeInfo) -> bool {
+            <String as Type<Postgres>>::compatible(ty)
         }
     }
 
@@ -371,22 +375,82 @@ mod tests {
             AwsRegionId::EuCentral1
         );
     }
+}
 
-    #[cfg(feature = "serde")]
-    mod serde_tests {
-        use super::*;
+#[cfg(feature = "serde")]
+#[cfg(test)]
+mod serde_tests {
+    use super::*;
 
-        #[test]
-        fn test_serialize() {
-            let region = AwsRegionId::UsEast1;
-            let serialized = serde_json::to_string(&region).unwrap();
-            assert_eq!(serialized, "\"us-east-1\"");
-        }
+    #[test]
+    fn test_serialize() {
+        let region = AwsRegionId::UsEast1;
+        let serialized = serde_json::to_string(&region).unwrap();
+        assert_eq!(serialized, "\"us-east-1\"");
+    }
 
-        #[test]
-        fn test_deserialize() {
-            let deserialized: AwsRegionId = serde_json::from_str("\"eu-west-1\"").unwrap();
-            assert_eq!(deserialized, AwsRegionId::EuWest1);
-        }
+    #[test]
+    fn test_deserialize() {
+        let deserialized: AwsRegionId = serde_json::from_str("\"eu-west-1\"").unwrap();
+        assert_eq!(deserialized, AwsRegionId::EuWest1);
+    }
+}
+
+#[cfg(feature = "sqlx-postgres")]
+#[cfg(test)]
+mod sqlx_tests {
+    use super::*;
+    use sqlx::PgPool;
+
+    #[ignore]
+    #[sqlx::test]
+    async fn serialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let region_str = "eu-central-1";
+        let region: AwsRegionId = region_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::varchar", region as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, region_str);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn serialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let region_str = "eu-central-1";
+        let region: AwsRegionId = region_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::text", region as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, region_str);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let region: AwsRegionId = "eu-central-1".parse().unwrap();
+        let deserialized =
+            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::varchar as "val: AwsRegionId""#)
+                .fetch_one(&pool)
+                .await?
+                .unwrap();
+        assert_eq!(deserialized, region);
+        Ok(())
+    }
+
+    #[ignore]
+    #[sqlx::test]
+    async fn deserialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let region: AwsRegionId = "eu-central-1".parse().unwrap();
+        let deserialized =
+            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::text as "val: AwsRegionId""#)
+                .fetch_one(&pool)
+                .await?
+                .unwrap();
+        assert_eq!(deserialized, region);
+        Ok(())
     }
 }
