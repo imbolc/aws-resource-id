@@ -174,7 +174,11 @@ macro_rules! impl_resource_id {
         #[cfg(feature = "sqlx-postgres")]
         impl Type<Postgres> for $type {
             fn type_info() -> PgTypeInfo {
-                <&str as Type<Postgres>>::type_info()
+                <String as Type<Postgres>>::type_info()
+            }
+
+            fn compatible(ty: &PgTypeInfo) -> bool {
+                <String as Type<Postgres>>::compatible(ty)
             }
         }
 
@@ -717,5 +721,59 @@ mod tests {
                 .to_string(),
             "vgw-1a2b3c4d5e6f7j8h9"
         );
+    }
+}
+
+#[cfg(feature = "sqlx-postgres")]
+#[cfg(test)]
+mod sqlx_tests {
+    use super::*;
+    use sqlx::PgPool;
+
+    #[sqlx::test]
+    async fn serialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let ami_str = "ami-12345678";
+        let ami: AwsAmiId = ami_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::varchar", ami as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, ami_str);
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn serialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let ami_str = "ami-12345678";
+        let ami: AwsAmiId = ami_str.parse().unwrap();
+        let serialized = sqlx::query_scalar!("SELECT $1::text", ami as _)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(serialized, ami_str);
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
+        let ami: AwsAmiId = "ami-12345678".parse().unwrap();
+        let deserialized =
+            sqlx::query_scalar!(r#"SELECT 'ami-12345678'::varchar as "val: AwsAmiId""#)
+                .fetch_one(&pool)
+                .await?
+                .unwrap();
+        assert_eq!(deserialized, ami);
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn deserialize_text(pool: PgPool) -> sqlx::Result<()> {
+        let ami: AwsAmiId = "ami-12345678".parse().unwrap();
+        let deserialized = sqlx::query_scalar!(r#"SELECT 'ami-12345678' as "val: AwsAmiId""#)
+            .fetch_one(&pool)
+            .await?
+            .unwrap();
+        assert_eq!(deserialized, ami);
+        Ok(())
     }
 }
