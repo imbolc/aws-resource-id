@@ -174,7 +174,11 @@ macro_rules! impl_resource_id {
         #[cfg(feature = "sqlx-postgres")]
         impl Type<Postgres> for $type {
             fn type_info() -> PgTypeInfo {
-                <&str as Type<Postgres>>::type_info()
+                <String as Type<Postgres>>::type_info()
+            }
+
+            fn compatible(ty: &PgTypeInfo) -> bool {
+                <String as Type<Postgres>>::compatible(ty)
             }
         }
 
