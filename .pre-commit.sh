@@ -28,6 +28,6 @@ typos .
 cargo machete
 cargo +nightly fmt -- --check
 cargo sort -c
-cargo test --all-features --all-targets -- --include-ignored
+cargo test --all-features --all-targets
 cargo test --all-features --doc
 cargo clippy --all-features --all-targets -- -D warnings

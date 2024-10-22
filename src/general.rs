@@ -730,7 +730,6 @@ mod sqlx_tests {
     use super::*;
     use sqlx::PgPool;
 
-    #[ignore]
     #[sqlx::test]
     async fn serialize_varchar(pool: PgPool) -> sqlx::Result<()> {
         let ami_str = "ami-12345678";
@@ -743,7 +742,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn serialize_text(pool: PgPool) -> sqlx::Result<()> {
         let ami_str = "ami-12345678";
@@ -756,7 +754,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
         let ami: AwsAmiId = "ami-12345678".parse().unwrap();
@@ -769,7 +766,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn deserialize_text(pool: PgPool) -> sqlx::Result<()> {
         let ami: AwsAmiId = "ami-12345678".parse().unwrap();

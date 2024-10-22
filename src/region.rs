@@ -402,7 +402,6 @@ mod sqlx_tests {
     use super::*;
     use sqlx::PgPool;
 
-    #[ignore]
     #[sqlx::test]
     async fn serialize_varchar(pool: PgPool) -> sqlx::Result<()> {
         let region_str = "eu-central-1";
@@ -415,7 +414,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn serialize_text(pool: PgPool) -> sqlx::Result<()> {
         let region_str = "eu-central-1";
@@ -428,7 +426,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
         let region: AwsRegionId = "eu-central-1".parse().unwrap();
@@ -441,7 +438,6 @@ mod sqlx_tests {
         Ok(())
     }
 
-    #[ignore]
     #[sqlx::test]
     async fn deserialize_text(pool: PgPool) -> sqlx::Result<()> {
         let region: AwsRegionId = "eu-central-1".parse().unwrap();
