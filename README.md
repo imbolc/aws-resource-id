@@ -17,6 +17,7 @@
 | [`AwsCustomerGatewayId`]             | `cgw-`        | Customer Gateway                  |
 | [`AwsElasticIpId`]                   | `eipalloc-`   | Elastic IP                        |
 | [`AwsEfsFileSystemId`]               | `fs-`         | EFS (Elastic File System)         |
+| [`AwsEfsMountTargetId`]              | `fsmt-`       | EFS Mount Target ID               |
 | [`AwsCloudFormationStackId`]         | `stack-`      | CloudFormation Stack              |
 | [`AwsElasticBeanstalkEnvironmentId`] | `e-`          | Elastic Beanstalk Environment     |
 | [`AwsInstanceId`]                    | `i-`          | EC2 Instance                      |

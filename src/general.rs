@@ -257,6 +257,7 @@ impl_resource_id!(
     "fs-",
     "AWS EFS (Elastic File System) ID"
 );
+impl_resource_id!(AwsEfsMountTargetId, "fsmt-", "AWS EFS Mount Target ID");
 impl_resource_id!(
     AwsCloudFormationStackId,
     "stack-",
@@ -432,6 +433,12 @@ mod tests {
             "fs-1234abcd"
         );
         assert_eq!(
+            AwsEfsMountTargetId::try_from("fsmt-1234abcd")
+                .unwrap()
+                .to_string(),
+            "fsmt-1234abcd"
+        );
+        assert_eq!(
             AwsCloudFormationStackId::try_from("stack-1234abcd")
                 .unwrap()
                 .to_string(),
@@ -588,6 +595,12 @@ mod tests {
                 .unwrap()
                 .to_string(),
             "fs-1a2b3c4d5e6f7j8h9"
+        );
+        assert_eq!(
+            AwsEfsMountTargetId::try_from("fsmt-1a2b3c4d5e6f7j8h9")
+                .unwrap()
+                .to_string(),
+            "fsmt-1a2b3c4d5e6f7j8h9"
         );
         assert_eq!(
             AwsCloudFormationStackId::try_from("stack-1a2b3c4d5e6f7j8h9")

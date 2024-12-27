@@ -225,7 +225,7 @@ mod sqlx_impl {
         }
     }
 
-    impl<'r> sqlx::Encode<'r, Postgres> for AwsRegionId {
+    impl sqlx::Encode<'_, Postgres> for AwsRegionId {
         fn encode_by_ref(
             &self,
             buf: &mut sqlx::postgres::PgArgumentBuffer,
