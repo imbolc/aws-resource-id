@@ -23,6 +23,9 @@ typos --version &>/dev/null || cargo install --locked typos-cli
 rustup toolchain list | grep -q 'nightly' || rustup toolchain install nightly
 cargo +nightly fmt --version &>/dev/null || rustup component add rustfmt --toolchain nightly
 
+# sqlx 0.9 uses `anonymous` as the default user for local socket URLs.
+export PGUSER=${PGUSER:-$USER}
+
 # Checks
 typos .
 cargo machete
