@@ -44,9 +44,15 @@
 
 ## Specific format ids
 
-| Type            | Size   | Stack-only | Example        | Details |
-|-----------------|--------|------------|----------------|---------|
-| [`AwsRegionId`] | 1 byte | yes        | `eu-central-1` | Region  |
+| Type                      | Size    | Stack-only | Example         | Details                |
+|---------------------------|---------|------------|-----------------|------------------------|
+| [`AwsRegionId`]           | 1 byte  | yes        | `eu-central-1`  | Region                 |
+| [`AwsAvailabilityZone`]   | 2 bytes | yes        | `eu-central-1a` | Availability zone name |
+
+Availability zone names accept a supported region followed by one lowercase
+ASCII letter (`a` through `z`). Parsing validates the format, not whether the
+zone exists or is available to an account. AZ IDs, Local Zones, and Wavelength
+Zones are not supported.
 
 
 ## Contributing

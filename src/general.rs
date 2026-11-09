@@ -20,8 +20,8 @@
 //! > <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html>
 #[cfg(feature = "sqlx-postgres")]
 use sqlx::{
-    postgres::{PgTypeInfo, PgValueRef},
     Postgres, Type,
+    postgres::{PgTypeInfo, PgValueRef},
 };
 use std::{convert::TryFrom, fmt, str::FromStr};
 
@@ -398,7 +398,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-           "failed to initialize AwsAmiId from \"ami-1234567!\": the unique part contains non ascii alphanumeric characters"
+            "failed to initialize AwsAmiId from \"ami-1234567!\": the unique part contains non ascii alphanumeric characters"
         );
     }
 

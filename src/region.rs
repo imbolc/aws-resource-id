@@ -211,8 +211,8 @@ impl serde::Serialize for AwsRegionId {
 mod sqlx_impl {
     use super::AwsRegionId;
     use sqlx::{
-        postgres::{PgTypeInfo, PgValueRef},
         Postgres, Type,
+        postgres::{PgTypeInfo, PgValueRef},
     };
 
     impl Type<Postgres> for AwsRegionId {
