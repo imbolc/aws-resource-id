@@ -6,67 +6,95 @@ use std::{convert::TryFrom, fmt, str::FromStr};
 #[error("Unknown region: {0}")]
 pub struct RegionError(String);
 
-/// AWS Region ID
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum AwsRegionId {
-    /// Africa (Cape Town)
-    AfSouth1,
-    /// Asia Pacific (Hong Kong)
-    ApEast1,
-    /// Asia Pacific (Tokyo)
-    ApNortheast1,
-    /// Asia Pacific (Seoul)
-    ApNortheast2,
-    /// Asia Pacific (Osaka)
-    ApNortheast3,
-    /// Asia Pacific (Mumbai)
-    ApSouth1,
-    /// Asia Pacific (Hyderabad)
-    ApSouth2,
-    /// Asia Pacific (Singapore)
-    ApSoutheast1,
-    /// Asia Pacific (Sydney)
-    ApSoutheast2,
-    /// Asia Pacific (Jakarta)
-    ApSoutheast3,
-    /// Asia Pacific (Melbourne)
-    ApSoutheast4,
-    /// Canada (Central)
-    CaCentral1,
-    /// Canada West (Calgary)
-    CaWest1,
-    /// Europe (Frankfurt)
-    EuCentral1,
-    /// Europe (Zurich)
-    EuCentral2,
-    /// Europe (Stockholm)
-    EuNorth1,
-    /// Europe (Milan)
-    EuSouth1,
-    /// Europe (Spain)
-    EuSouth2,
-    /// Europe (Ireland)
-    EuWest1,
-    /// Europe (London)
-    EuWest2,
-    /// Europe (Paris)
-    EuWest3,
-    /// Israel (Tel Aviv)
-    IlCentral1,
-    /// Middle East (UAE)
-    MeCentral1,
-    /// Middle East (Bahrain)
-    MeSouth1,
-    /// South America (São Paulo)
-    SaEast1,
-    /// US East (N. Virginia)
-    UsEast1,
-    /// US East (Ohio)
-    UsEast2,
-    /// US West (N. California)
-    UsWest1,
-    /// US West (Oregon)
-    UsWest2,
+macro_rules! region_name {
+    ($area:literal, $location:literal) => {
+        concat!($area, " (", $location, ")")
+    };
+}
+
+macro_rules! define_regions {
+    ($($variant:ident => ($area:literal, $location:literal),)+) => {
+        /// AWS Region ID
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum AwsRegionId {
+            $(
+                #[doc = region_name!($area, $location)]
+                $variant,
+            )+
+        }
+
+        impl AwsRegionId {
+            const fn labels(self) -> (&'static str, &'static str, &'static str) {
+                match self {
+                    $(Self::$variant => ($area, $location, region_name!($area, $location)),)+
+                }
+            }
+        }
+    };
+}
+
+define_regions! {
+    AfSouth1 => ("Africa", "Cape Town"),
+    ApEast1 => ("Asia Pacific", "Hong Kong"),
+    ApNortheast1 => ("Asia Pacific", "Tokyo"),
+    ApNortheast2 => ("Asia Pacific", "Seoul"),
+    ApNortheast3 => ("Asia Pacific", "Osaka"),
+    ApSouth1 => ("Asia Pacific", "Mumbai"),
+    ApSouth2 => ("Asia Pacific", "Hyderabad"),
+    ApSoutheast1 => ("Asia Pacific", "Singapore"),
+    ApSoutheast2 => ("Asia Pacific", "Sydney"),
+    ApSoutheast3 => ("Asia Pacific", "Jakarta"),
+    ApSoutheast4 => ("Asia Pacific", "Melbourne"),
+    CaCentral1 => ("Canada", "Central"),
+    CaWest1 => ("Canada West", "Calgary"),
+    EuCentral1 => ("Europe", "Frankfurt"),
+    EuCentral2 => ("Europe", "Zurich"),
+    EuNorth1 => ("Europe", "Stockholm"),
+    EuSouth1 => ("Europe", "Milan"),
+    EuSouth2 => ("Europe", "Spain"),
+    EuWest1 => ("Europe", "Ireland"),
+    EuWest2 => ("Europe", "London"),
+    EuWest3 => ("Europe", "Paris"),
+    IlCentral1 => ("Israel", "Tel Aviv"),
+    MeCentral1 => ("Middle East", "UAE"),
+    MeSouth1 => ("Middle East", "Bahrain"),
+    SaEast1 => ("South America", "São Paulo"),
+    UsEast1 => ("US East", "N. Virginia"),
+    UsEast2 => ("US East", "Ohio"),
+    UsWest1 => ("US West", "N. California"),
+    UsWest2 => ("US West", "Oregon"),
+}
+
+impl AwsRegionId {
+    /// Broad geographic area
+    ///
+    /// ```
+    /// # use aws_resource_id::AwsRegionId;
+    /// assert_eq!(AwsRegionId::EuCentral1.area(), "Europe");
+    /// ```
+    pub const fn area(self) -> &'static str {
+        self.labels().0
+    }
+
+    /// Short location label
+    ///
+    /// ```
+    /// # use aws_resource_id::AwsRegionId;
+    /// assert_eq!(AwsRegionId::EuCentral1.location(), "Frankfurt");
+    /// ```
+    pub const fn location(self) -> &'static str {
+        self.labels().1
+    }
+
+    /// Full human-readable region name
+    ///
+    /// ```
+    /// # use aws_resource_id::AwsRegionId;
+    /// assert_eq!(AwsRegionId::EuCentral1.name(), "Europe (Frankfurt)");
+    /// ```
+    pub const fn name(self) -> &'static str {
+        self.labels().2
+    }
 }
 
 impl TryFrom<&str> for AwsRegionId {
@@ -430,7 +458,7 @@ mod sqlx_tests {
     async fn deserialize_varchar(pool: PgPool) -> sqlx::Result<()> {
         let region: AwsRegionId = "eu-central-1".parse().unwrap();
         let deserialized =
-            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::varchar as "val: AwsRegionId""#)
+            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::varchar AS "val: AwsRegionId""#)
                 .fetch_one(&pool)
                 .await?
                 .unwrap();
@@ -442,7 +470,7 @@ mod sqlx_tests {
     async fn deserialize_text(pool: PgPool) -> sqlx::Result<()> {
         let region: AwsRegionId = "eu-central-1".parse().unwrap();
         let deserialized =
-            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::text as "val: AwsRegionId""#)
+            sqlx::query_scalar!(r#"SELECT 'eu-central-1'::text AS "val: AwsRegionId""#)
                 .fetch_one(&pool)
                 .await?
                 .unwrap();
