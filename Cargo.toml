@@ -4,7 +4,7 @@ edition = "2024"
 license = "MIT"
 name = "aws-resource-id"
 repository = "https://github.com/imbolc/aws-resource-id"
-version = "2.2.0"
+version = "3.0.0"
 
 [features]
 sqlx-postgres = ["sqlx"]

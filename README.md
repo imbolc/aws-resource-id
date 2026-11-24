@@ -44,15 +44,23 @@
 
 ## Specific format ids
 
-| Type                      | Size    | Stack-only | Example         | Details                |
-|---------------------------|---------|------------|-----------------|------------------------|
-| [`AwsRegionId`]           | 1 byte  | yes        | `eu-central-1`  | Region                 |
-| [`AwsAvailabilityZone`]   | 2 bytes | yes        | `eu-central-1a` | Availability zone name |
+| Type                    | Size    | Stack-only | Example         | Details         |
+|-------------------------|---------|------------|-----------------|-----------------|
+| [`AwsRegionId`]         | 1 byte  | yes        | `eu-central-1`  | Region          |
+| [`AwsAvailabilityZone`] | 6 bytes | yes        | `eu-central-1a` | Zone name or ID |
 
-Availability zone names accept a supported region followed by one lowercase
-ASCII letter (`a` through `z`). Parsing validates the format, not whether the
-zone exists or is available to an account. AZ IDs, Local Zones, and Wavelength
-Zones are not supported.
+`AwsAvailabilityZone` parses zone names and IDs for supported regions.
+
+- Standard Availability Zone name `us-east-1a` or ID `use1-az1`
+- Local Zone name `us-west-2-lax-1a` or ID `usw2-lax1-az1`
+- Wavelength Zone name `us-east-1-wl1-bos-wlz-1` or ID `use1-wl1-bos-wlz1`
+
+Parsing validates syntax only. Location codes use three lowercase ASCII letters.
+Numeric suffixes use decimal digits, start with a nonzero digit, and have a value
+from 1 through 255.
+
+Equality compares the exact identifier spelling. Ordering compares the region,
+then format, then location and suffix.
 
 
 ## Contributing
