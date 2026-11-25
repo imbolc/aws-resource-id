@@ -4,6 +4,7 @@ use std::{convert::TryFrom, fmt, str::FromStr};
 
 /// Error encountered when parsing an AWS zone name or ID
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum AvailabilityZoneError {
     /// The zone suffix does not match a supported format
     #[error("Invalid availability zone suffix: {0}")]
