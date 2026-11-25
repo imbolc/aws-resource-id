@@ -13,8 +13,9 @@ macro_rules! region_name {
 }
 
 macro_rules! define_regions {
-    ($($variant:ident => ($area:literal, $location:literal),)+) => {
+    ($($variant:ident => ($name:literal, $abbreviation:literal, $area:literal, $location:literal),)+) => {
         /// AWS Region ID
+        #[repr(u8)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub enum AwsRegionId {
             $(
@@ -24,9 +25,37 @@ macro_rules! define_regions {
         }
 
         impl AwsRegionId {
+            pub(crate) fn from_name(s: &str) -> Result<Self, RegionError> {
+                match s {
+                    $($name => Ok(Self::$variant),)+
+                    _ => Err(RegionError(s.into())),
+                }
+            }
+
+            pub(crate) fn from_abbreviation(s: &str) -> Result<Self, RegionError> {
+                match s {
+                    $($abbreviation => Ok(Self::$variant),)+
+                    _ => Err(RegionError(s.into())),
+                }
+            }
+
+            pub(crate) const fn abbreviation(self) -> &'static str {
+                match self {
+                    $(Self::$variant => $abbreviation,)+
+                }
+            }
+
             const fn labels(self) -> (&'static str, &'static str, &'static str) {
                 match self {
                     $(Self::$variant => ($area, $location, region_name!($area, $location)),)+
+                }
+            }
+        }
+
+        impl From<AwsRegionId> for &'static str {
+            fn from(region: AwsRegionId) -> Self {
+                match region {
+                    $(AwsRegionId::$variant => $name,)+
                 }
             }
         }
@@ -34,35 +63,35 @@ macro_rules! define_regions {
 }
 
 define_regions! {
-    AfSouth1 => ("Africa", "Cape Town"),
-    ApEast1 => ("Asia Pacific", "Hong Kong"),
-    ApNortheast1 => ("Asia Pacific", "Tokyo"),
-    ApNortheast2 => ("Asia Pacific", "Seoul"),
-    ApNortheast3 => ("Asia Pacific", "Osaka"),
-    ApSouth1 => ("Asia Pacific", "Mumbai"),
-    ApSouth2 => ("Asia Pacific", "Hyderabad"),
-    ApSoutheast1 => ("Asia Pacific", "Singapore"),
-    ApSoutheast2 => ("Asia Pacific", "Sydney"),
-    ApSoutheast3 => ("Asia Pacific", "Jakarta"),
-    ApSoutheast4 => ("Asia Pacific", "Melbourne"),
-    CaCentral1 => ("Canada", "Central"),
-    CaWest1 => ("Canada West", "Calgary"),
-    EuCentral1 => ("Europe", "Frankfurt"),
-    EuCentral2 => ("Europe", "Zurich"),
-    EuNorth1 => ("Europe", "Stockholm"),
-    EuSouth1 => ("Europe", "Milan"),
-    EuSouth2 => ("Europe", "Spain"),
-    EuWest1 => ("Europe", "Ireland"),
-    EuWest2 => ("Europe", "London"),
-    EuWest3 => ("Europe", "Paris"),
-    IlCentral1 => ("Israel", "Tel Aviv"),
-    MeCentral1 => ("Middle East", "UAE"),
-    MeSouth1 => ("Middle East", "Bahrain"),
-    SaEast1 => ("South America", "São Paulo"),
-    UsEast1 => ("US East", "N. Virginia"),
-    UsEast2 => ("US East", "Ohio"),
-    UsWest1 => ("US West", "N. California"),
-    UsWest2 => ("US West", "Oregon"),
+    AfSouth1 => ("af-south-1", "afs1", "Africa", "Cape Town"),
+    ApEast1 => ("ap-east-1", "ape1", "Asia Pacific", "Hong Kong"),
+    ApNortheast1 => ("ap-northeast-1", "apne1", "Asia Pacific", "Tokyo"),
+    ApNortheast2 => ("ap-northeast-2", "apne2", "Asia Pacific", "Seoul"),
+    ApNortheast3 => ("ap-northeast-3", "apne3", "Asia Pacific", "Osaka"),
+    ApSouth1 => ("ap-south-1", "aps1", "Asia Pacific", "Mumbai"),
+    ApSouth2 => ("ap-south-2", "aps2", "Asia Pacific", "Hyderabad"),
+    ApSoutheast1 => ("ap-southeast-1", "apse1", "Asia Pacific", "Singapore"),
+    ApSoutheast2 => ("ap-southeast-2", "apse2", "Asia Pacific", "Sydney"),
+    ApSoutheast3 => ("ap-southeast-3", "apse3", "Asia Pacific", "Jakarta"),
+    ApSoutheast4 => ("ap-southeast-4", "apse4", "Asia Pacific", "Melbourne"),
+    CaCentral1 => ("ca-central-1", "cac1", "Canada", "Central"),
+    CaWest1 => ("ca-west-1", "caw1", "Canada West", "Calgary"),
+    EuCentral1 => ("eu-central-1", "euc1", "Europe", "Frankfurt"),
+    EuCentral2 => ("eu-central-2", "euc2", "Europe", "Zurich"),
+    EuNorth1 => ("eu-north-1", "eun1", "Europe", "Stockholm"),
+    EuSouth1 => ("eu-south-1", "eus1", "Europe", "Milan"),
+    EuSouth2 => ("eu-south-2", "eus2", "Europe", "Spain"),
+    EuWest1 => ("eu-west-1", "euw1", "Europe", "Ireland"),
+    EuWest2 => ("eu-west-2", "euw2", "Europe", "London"),
+    EuWest3 => ("eu-west-3", "euw3", "Europe", "Paris"),
+    IlCentral1 => ("il-central-1", "ilc1", "Israel", "Tel Aviv"),
+    MeCentral1 => ("me-central-1", "mec1", "Middle East", "UAE"),
+    MeSouth1 => ("me-south-1", "mes1", "Middle East", "Bahrain"),
+    SaEast1 => ("sa-east-1", "sae1", "South America", "São Paulo"),
+    UsEast1 => ("us-east-1", "use1", "US East", "N. Virginia"),
+    UsEast2 => ("us-east-2", "use2", "US East", "Ohio"),
+    UsWest1 => ("us-west-1", "usw1", "US West", "N. California"),
+    UsWest2 => ("us-west-2", "usw2", "US West", "Oregon"),
 }
 
 impl AwsRegionId {
@@ -101,74 +130,7 @@ impl TryFrom<&str> for AwsRegionId {
     type Error = crate::Error;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        match s {
-            "af-south-1" => Ok(AwsRegionId::AfSouth1),
-            "ap-east-1" => Ok(AwsRegionId::ApEast1),
-            "ap-northeast-1" => Ok(AwsRegionId::ApNortheast1),
-            "ap-northeast-2" => Ok(AwsRegionId::ApNortheast2),
-            "ap-northeast-3" => Ok(AwsRegionId::ApNortheast3),
-            "ap-south-1" => Ok(AwsRegionId::ApSouth1),
-            "ap-south-2" => Ok(AwsRegionId::ApSouth2),
-            "ap-southeast-1" => Ok(AwsRegionId::ApSoutheast1),
-            "ap-southeast-2" => Ok(AwsRegionId::ApSoutheast2),
-            "ap-southeast-3" => Ok(AwsRegionId::ApSoutheast3),
-            "ap-southeast-4" => Ok(AwsRegionId::ApSoutheast4),
-            "ca-central-1" => Ok(AwsRegionId::CaCentral1),
-            "ca-west-1" => Ok(AwsRegionId::CaWest1),
-            "eu-central-1" => Ok(AwsRegionId::EuCentral1),
-            "eu-central-2" => Ok(AwsRegionId::EuCentral2),
-            "eu-north-1" => Ok(AwsRegionId::EuNorth1),
-            "eu-south-1" => Ok(AwsRegionId::EuSouth1),
-            "eu-south-2" => Ok(AwsRegionId::EuSouth2),
-            "eu-west-1" => Ok(AwsRegionId::EuWest1),
-            "eu-west-2" => Ok(AwsRegionId::EuWest2),
-            "eu-west-3" => Ok(AwsRegionId::EuWest3),
-            "il-central-1" => Ok(AwsRegionId::IlCentral1),
-            "me-central-1" => Ok(AwsRegionId::MeCentral1),
-            "me-south-1" => Ok(AwsRegionId::MeSouth1),
-            "sa-east-1" => Ok(AwsRegionId::SaEast1),
-            "us-east-1" => Ok(AwsRegionId::UsEast1),
-            "us-east-2" => Ok(AwsRegionId::UsEast2),
-            "us-west-1" => Ok(AwsRegionId::UsWest1),
-            "us-west-2" => Ok(AwsRegionId::UsWest2),
-            _ => Err(RegionError(s.into()).into()),
-        }
-    }
-}
-
-impl From<AwsRegionId> for &'static str {
-    fn from(region: AwsRegionId) -> Self {
-        match region {
-            AwsRegionId::AfSouth1 => "af-south-1",
-            AwsRegionId::ApEast1 => "ap-east-1",
-            AwsRegionId::ApNortheast1 => "ap-northeast-1",
-            AwsRegionId::ApNortheast2 => "ap-northeast-2",
-            AwsRegionId::ApNortheast3 => "ap-northeast-3",
-            AwsRegionId::ApSouth1 => "ap-south-1",
-            AwsRegionId::ApSouth2 => "ap-south-2",
-            AwsRegionId::ApSoutheast1 => "ap-southeast-1",
-            AwsRegionId::ApSoutheast2 => "ap-southeast-2",
-            AwsRegionId::ApSoutheast3 => "ap-southeast-3",
-            AwsRegionId::ApSoutheast4 => "ap-southeast-4",
-            AwsRegionId::CaCentral1 => "ca-central-1",
-            AwsRegionId::CaWest1 => "ca-west-1",
-            AwsRegionId::EuCentral1 => "eu-central-1",
-            AwsRegionId::EuCentral2 => "eu-central-2",
-            AwsRegionId::EuNorth1 => "eu-north-1",
-            AwsRegionId::EuSouth1 => "eu-south-1",
-            AwsRegionId::EuSouth2 => "eu-south-2",
-            AwsRegionId::EuWest1 => "eu-west-1",
-            AwsRegionId::EuWest2 => "eu-west-2",
-            AwsRegionId::EuWest3 => "eu-west-3",
-            AwsRegionId::IlCentral1 => "il-central-1",
-            AwsRegionId::MeCentral1 => "me-central-1",
-            AwsRegionId::MeSouth1 => "me-south-1",
-            AwsRegionId::SaEast1 => "sa-east-1",
-            AwsRegionId::UsEast1 => "us-east-1",
-            AwsRegionId::UsEast2 => "us-east-2",
-            AwsRegionId::UsWest1 => "us-west-1",
-            AwsRegionId::UsWest2 => "us-west-2",
-        }
+        Self::from_name(s).map_err(Into::into)
     }
 }
 
@@ -312,6 +274,12 @@ mod tests {
         for region_str in all_regions {
             let region = AwsRegionId::try_from(region_str).unwrap();
             assert_eq!(region.as_ref(), region_str);
+            let abbreviation = region.abbreviation();
+            assert_eq!(
+                AwsRegionId::from_abbreviation(abbreviation).unwrap(),
+                region
+            );
+            assert!(AwsRegionId::try_from(abbreviation).is_err());
         }
     }
 

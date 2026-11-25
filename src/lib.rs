@@ -14,7 +14,7 @@ pub use region::*;
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
-    /// Parsing an AWS availability zone name
+    /// Parsing an AWS zone name or ID
     #[error(transparent)]
     AvailabilityZone(#[from] AvailabilityZoneError),
     /// Parsing AWS resource ID in the general format

@@ -79,7 +79,7 @@ Transform tasks into verifiable goals:
 
 For multi-step tasks, state a brief plan:
 
-```
+```text
 1. [Step] → verify: [check]
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
@@ -108,9 +108,3 @@ Make checks pass:
 - Use fully qualified paths, e.g. `serde::Deserialize`
 - Put external macros after built-in ones
 - Sort them if possible
-
-## Git
-
-- Don't look into files / folders included in `.gitignore`
-- Never ask to stage or commit anything, but after finishing a coding task,
-  suggest a commit message
